@@ -1,5 +1,5 @@
 from grammar import Grammar
-from parser_toolkit import augment_grammar, recursion
+from parser_toolkit import augment_grammar, follow
 from context_free_grammar import Context_Free_Grammar
 from copy import deepcopy
 
@@ -17,29 +17,26 @@ class slr():
 
 	def generate_goto(self):
 		
-		goto_table = {}
+		self.goto_table = {}
 
 		for symbol in list(self.augmented_grammar.terminal) + list(self.augmented_grammar.non_terminal):
-			goto_table[symbol] = [None]
+			self.goto_table[symbol] = [None]
 		
 		for grammar in self.grammars:
 			for symbol in list(grammar.non_terminal) + list(grammar.terminal):
 				
 				next_grammar = self.goto(grammar, symbol)
 				if next_grammar.production != {}:
-					print self.grammars.index(grammar), symbol, next_grammar
 					
 					if next_grammar not in self.grammars:
 						self.grammars.append(next_grammar)
-						for key in goto_table:
-							goto_table[key].append(None)
-					print self.grammars.index(next_grammar)
-					raw_input()
+						for key in self.goto_table:
+							self.goto_table[key].append(None)
 					
-					goto_table[symbol][self.grammars.index(grammar)] = self.grammars.index(next_grammar)
+					self.goto_table[symbol][self.grammars.index(grammar)] = self.grammars.index(next_grammar)
 		
-		print goto_table
-		print len(self.grammars)
+		for non_terminal in self.augmented_grammar.non_terminal:
+			self.parsing_table[non_terminal] = self.goto_table[non_terminal]
 	
 
 	def goto(self, grammar, symbol):
@@ -90,6 +87,44 @@ class slr():
 			grammar.add_non_terminal(symbol)
 
 		return grammar
+	
+	
+	def generate_shift_reduce(self):
+		
+		for terminal in list(self.augmented_grammar.terminal) + ['$']:
+			self.parsing_table[terminal] = [None] * len(self.grammars)
+
+		for grammar in self.grammars:
+			for LHS in grammar.production:
+				for production in grammar.production[LHS]:
+					index = production.index('.') + 1
+					state = self.grammars.index(grammar)
+					if index == len(production):
+						for symbol in list(set(follow(self.augmented_grammar, LHS))):
+							self.parsing_table[symbol][state] = ('R', LHS, self.augmented_grammar.production[LHS].index(['.'] + production[:-1]))
+						if LHS == self.augmented_grammar.start_symbol:
+							self.parsing_table[symbol][state] = 'Accept'
+							
+					elif production[index] in self.augmented_grammar.terminal:
+						symbol = production[index]
+						self.parsing_table[symbol][state] = ('S', self.goto_table[symbol][state])
+	
+	
+	def show_table(self):
+		print '\t',
+		for key in self.parsing_table:
+			print key,'\t',
+		print
+		print
+
+		for i in range(len(self.grammars)):
+			print i,'\t',
+			for key in self.parsing_table:
+				print self.parsing_table[key][i], '\t',
+			print
+		
 
 a = slr()
 a.generate_goto()
+a.generate_shift_reduce()
+a.show_table()

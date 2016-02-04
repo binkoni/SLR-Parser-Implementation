@@ -18,7 +18,7 @@ def first(grammar, symbol, result = []):
 
 def follow(grammar, symbol, result = []):
 	
-	if symbol is grammar.start_symbol:
+	if symbol == grammar.start_symbol:
 		result.append('$')
 
 	for LHS in grammar.production:
