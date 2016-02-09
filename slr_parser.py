@@ -1,4 +1,4 @@
-from grammar import Grammar
+from md_grammar import Grammar
 from parser_toolkit import augment_grammar, follow
 from context_free_grammar import Context_Free_Grammar
 from copy import deepcopy
@@ -170,5 +170,5 @@ a = SLR()
 a.generate_goto()
 a.generate_shift_reduce()
 a.show_table()
-parse_string3 = ['id', '+', 'id', '*', 'id', '+', 'a']
+parse_string3 = ['~', 'author', ':', '~', 'title', ':', 'a','~', '~']
 print a.parse(parse_string3)
