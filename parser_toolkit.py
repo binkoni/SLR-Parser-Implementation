@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 def recursion(LHS, RHS):
 	return LHS in RHS
 
@@ -41,6 +43,7 @@ def follow(grammar, symbol, result = []):
 
 def augment_grammar(grammar):
 	
+	grammar = deepcopy(grammar)
 	grammar.add_production_rule(grammar.start_symbol + '\'', [grammar.start_symbol])
 	grammar.set_start_symbol(grammar.start_symbol + '\'')
 	for LHS in grammar.production:

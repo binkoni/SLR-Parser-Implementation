@@ -3,13 +3,12 @@ from parser_toolkit import augment_grammar, follow
 from context_free_grammar import Context_Free_Grammar
 from copy import deepcopy
 
-
-
-class slr():
+class SLR():
 	
 	def __init__(self):
 	
-		self.augmented_grammar = augment_grammar(Grammar())
+		self.grammar = Grammar()
+		self.augmented_grammar = augment_grammar(self.grammar)
 		self.parsing_table = {}
 		self.grammars = [self.augmented_grammar]
 
@@ -122,9 +121,54 @@ class slr():
 			for key in self.parsing_table:
 				print self.parsing_table[key][i], '\t',
 			print
-		
+	
+	def parse(self, input_buffer):
 
-a = slr()
+		input_buffer.append('$')
+		stack = [0]
+		success = False
+		
+		print '\n', 'Stack', '\t', 'Input', '\t', 'Action', '\n'
+
+		while not success:
+			
+			lookup_key = input_buffer[0]
+			lookup_state = stack[-1]
+
+			if lookup_key in list(self.grammar.terminal) + list(self.grammar.non_terminal) + ['$']:
+				lookup_result = self.parsing_table[lookup_key][lookup_state]
+			else:
+				print 'Terminal ',lookup_key, 'doesn\'t exist in the grammar'
+				break
+			
+			print stack, '\t', input_buffer, '\t', lookup_result
+
+			if lookup_result is None:
+				print '\nError!\n'
+				break
+			elif lookup_result == 'Accept':
+				print '\nSuccess!\n'
+				success = True
+			else:
+
+				if lookup_result[0] == 'S':
+					stack.append(input_buffer.pop(0))
+					stack.append(lookup_result[1])
+				elif lookup_result[0] == 'R':
+					for i in self.grammar.production[lookup_result[1]][lookup_result[2]]:
+						stack.pop()
+						stack.pop()
+					stack.append(lookup_result[1])
+					lookup_result = self.parsing_table[stack[-1]][stack[-2]]
+					stack.append(lookup_result)
+				else:
+					pass
+		
+		return success	
+
+a = SLR()
 a.generate_goto()
 a.generate_shift_reduce()
 a.show_table()
+parse_string3 = ['id', '+', 'id', '*', 'id', '+', 'a']
+print a.parse(parse_string3)
